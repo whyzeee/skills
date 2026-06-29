@@ -6,9 +6,20 @@ A personal collection of agent skills that turn repo folders into usable knowled
 
 Provide skills that harness can invoke to initialize, populate, and query an [OKF](https://github.com/GoogleCloudPlatform/knowledge-catalog/tree/main/okf) (Open Knowledge Format) knowledge base inside any software or data project. The first three skills focus on project onboarding and memory:
 
-- `/setup-okf` — scaffold an OKF bundle under `docs/app/`, set up triage labels and issue-tracker conventions, and write agent instructions.
+- `/setup-okf` — infer purpose, domain model, and features from existing docs; scaffold an OKF bundle under `docs/app/`; discover undocumented systems and decisions; migrate `README.md`/`CONTEXT.md` into `docs/app/index.md` without deleting them; set up triage labels, issue tracker, and agent instructions under `docs/agents/`; run `/grill-okf` only if gaps remain.
 - `/grill-okf` — interview the user to capture purpose, domain model, and decisions, then write them as OKF concept files.
 - `/refer-okf` — answer questions by reading the OKF bundle and grounding responses in the repo's own knowledge.
+
+## Structure
+
+`/setup-okf` lays out the OKF bundle like this:
+
+- `docs/app/index.md` — migrated from `README.md` and `CONTEXT.md` (originals stay put).
+- `docs/app/decisions/` — design decisions (flat).
+- `docs/app/concepts/` — glossary and domain terms (flat).
+- `docs/agents/` — OKF agent instructions, including references to `/refer-okf`.
+
+Existing ADRs are moved into `docs/app/decisions/` and removed from their old paths; user guides under `guides/` or `docs/guides/` are left untouched.
 
 ## Inspiration
 

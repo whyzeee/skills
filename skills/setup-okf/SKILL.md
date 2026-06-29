@@ -27,7 +27,7 @@ Read what already exists:
 - Any existing `docs/agents/` files
 - Any existing `.scratch/` directory
 
-Present a short summary: what's present, what's missing, what will be created.
+From this, infer the project's **overall purpose**, **domain model**, and any **concrete features** already visible. Present a short summary and ask the user to confirm or correct these three items before continuing.
 
 ### 2. OKF template
 
@@ -72,7 +72,22 @@ Ask the user to confirm, swap, or customize.
 - Update `docs/app/index.md` to list the new concept directories.
 - Append an initialization entry to `docs/app/log.md`.
 
-### 4. Issue tracker
+### 4. Explore the codebase for missing OKF pieces
+
+After scaffolding OKF, explore the code to find concepts not yet documented:
+
+- Identify systems, services, APIs, databases, datasets, tables, pipelines, or modules.
+- Note domain terms that appear in code but are not in `docs/app/concepts/`.
+- Note implicit design decisions (technologies, patterns, constraints) not yet in `docs/app/decisions/`.
+
+For each gap, either:
+
+- Write a stub OKF concept file with a `type` and `description`, or
+- Add it to a running list in `docs/app/log.md` as `**To document**: ...` if it needs user input first.
+
+Present a short summary of what was documented and what remains to be grilled.
+
+### 5. Issue tracker
 
 Choose the tracker:
 
@@ -86,7 +101,7 @@ If GitHub/GitLab is chosen, ask:
 
 Confirm the choice and write `docs/agents/issue-tracker.md`.
 
-### 5. Triage labels
+### 6. Triage labels
 
 Use the five canonical roles from `setup-matt-pocock-skills`:
 
@@ -98,7 +113,7 @@ Use the five canonical roles from `setup-matt-pocock-skills`:
 
 Ask if the repo already uses different label strings. Write `docs/agents/triage-labels.md` with the mapping.
 
-### 6. Domain docs
+### 7. Domain docs
 
 Confirm the layout:
 
@@ -106,7 +121,7 @@ Confirm the layout:
 
 Write `docs/agents/domain.md` describing the layout.
 
-### 7. OKF agent instructions
+### 8. OKF agent instructions
 
 Write `docs/agents/okf.md` telling other skills how to read and write OKF in this repo. Include:
 
@@ -120,7 +135,7 @@ Write `docs/agents/okf.md` telling other skills how to read and write OKF in thi
 - Include the concept templates from `/grill-okf`.
 - Mention that `/refer-okf` is the preferred skill for querying OKF and that other skills should rely on it for OKF-backed answers.
 
-### 8. Agent skills block
+### 9. Agent skills block
 
 Edit `CLAUDE.md` or `AGENTS.md` (whichever exists; ask if neither exists) and add an `## Agent skills` block:
 
@@ -142,9 +157,11 @@ OKF knowledge base under `docs/app/`. Query it with `/refer-okf`. See `docs/agen
 
 If the block already exists, update it in place.
 
-### 9. Run /grill-okf
+### 10. Run /grill-okf or finish
 
-Run `/grill-okf` to initiate the project. Ask the user what to grill first: the overall purpose, the domain model, or a concrete feature. The user may decline, but it is the default next step.
+If Step 4 surfaced gaps, run `/grill-okf` focused on those gaps. Ask the user which gap to tackle first.
+
+If no gaps remain and the user confirmed the purpose, domain model, and features in Step 1, finish without further questions. Still offer `/grill-okf` for later use.
 
 ## Done
 
