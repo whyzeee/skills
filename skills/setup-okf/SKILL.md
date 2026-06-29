@@ -53,6 +53,7 @@ docs/app/
 ├── log.md
 ├── concepts/
 ├── decisions/
+├── systems/
 ├── datasets/
 ├── tables/
 ├── pipelines/
@@ -60,6 +61,16 @@ docs/app/
 ```
 
 Ask the user to confirm, swap, or customize.
+
+### 2b. Context boundaries
+
+For directories that benefit from grouping, infer contexts from the codebase:
+
+- `systems/` (almost always) — group by component, service, or bounded context.
+- `concepts/` and `tables/` (data template; almost always) — group by source system, domain area, feature, or pipeline stage (e.g., `raw/`, `transformed/`, `analytics/`).
+- `decisions/`, `pipelines/`, `datasets/`, `playbooks/` — group only if the codebase clearly has multiple bounded contexts; otherwise keep flat. If unclear, ask the user.
+
+Contexts can be nested from broad to narrow, e.g. `concepts/<feature>/<role>/<term>.md` or `tables/<source>/<schema>/<table>.md`. Confirm the inferred grouping with the user before creating directories.
 
 ### 3. Create the OKF bundle
 
@@ -69,7 +80,8 @@ Ask the user to confirm, swap, or customize.
 - If `CONTEXT.md` exists, merge its content into `docs/app/index.md` as a glossary/concepts section.
 - Do **not** touch `guides/` or `docs/guides/`.
 - Migrate existing ADRs from `docs/adr/` into `docs/app/decisions/` as OKF concept files, then remove the original ADR files.
-- Update `docs/app/index.md` to list the new concept directories.
+- Create sub-directory `index.md` files for each context directory that needs progressive disclosure.
+- Update `docs/app/index.md` to list the new concept directories and contexts. The root `index.md` may inline the contents of sub-directory `index.md` files so agents can scan the whole knowledge base from one file.
 - Append an initialization entry to `docs/app/log.md`.
 
 ### 4. Explore the codebase for missing OKF pieces
@@ -79,10 +91,11 @@ After scaffolding OKF, explore the code to find concepts not yet documented:
 - Identify systems, services, APIs, databases, datasets, tables, pipelines, or modules.
 - Note domain terms that appear in code but are not in `docs/app/concepts/`.
 - Note implicit design decisions (technologies, patterns, constraints) not yet in `docs/app/decisions/`.
+- Infer the correct context subdirectory for each concept. If the context is ambiguous, ask the user or log it as `**To document**: ...`.
 
 For each gap, either:
 
-- Write a stub OKF concept file with a `type` and `description`, or
+- Write a stub OKF concept file with a `type` and `description` in the inferred context path, or
 - Add it to a running list in `docs/app/log.md` as `**To document**: ...` if it needs user input first.
 
 Present a short summary of what was documented and what remains to be grilled.
@@ -128,9 +141,9 @@ Write `docs/agents/okf.md` telling other skills how to read and write OKF in thi
 - This repo uses OKF v0.1 under `docs/app/`.
 - Concepts are markdown files with YAML frontmatter; `type` is required.
 - Reserved filenames: `docs/app/index.md`, `docs/app/log.md`.
-- Cross-links should be bundle-relative from `docs/app/` (e.g., `/concepts/order.md`).
-- New domain terms go under `docs/app/concepts/`.
-- New design decisions go under `docs/app/decisions/`.
+- Cross-links should be bundle-relative from `docs/app/` (e.g., `/concepts/sales/order.md` or `/tables/source_users/users.md`).
+- New domain terms go under `docs/app/concepts/`, inside the appropriate context subdirectory. Infer the context from the codebase; ask the user if it is ambiguous.
+- New design decisions go under `docs/app/decisions/`, grouped by context only when the codebase has clear bounded contexts.
 - After adding or changing a concept, update `docs/app/index.md` and append to `docs/app/log.md`.
 - Include the concept templates from `/grill-okf`.
 - Mention that `/refer-okf` is the preferred skill for querying OKF and that other skills should rely on it for OKF-backed answers.

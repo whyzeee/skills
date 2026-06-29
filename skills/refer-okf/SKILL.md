@@ -9,18 +9,18 @@ Answer questions using only the OKF knowledge bundle under `docs/app/`. Read `do
 
 ## Quick start
 
-1. Read `docs/app/index.md` to find the concept directories and any directory indexes.
+1. Read `docs/app/index.md` to find the concept directories and contexts. The root index may inline sub-directory indexes.
 2. Identify which concepts are relevant to the user's question.
-3. Read those concept files.
+3. Read those concept files directly; only read a sub-directory `index.md` if the root index is insufficient to locate the concept.
 4. Follow cross-links (`/concepts/...`, `/decisions/...`, `/systems/...`) until you have enough context.
 5. Answer the question, citing the concept files you used.
 
 ## Query patterns
 
-- **Term definition** — read `docs/app/concepts/<term>.md` or search the `concepts/` directory.
+- **Term definition** — read `docs/app/concepts/<context>/<term>.md` or search the `concepts/` directory tree.
 - **Design decision** — read `docs/app/decisions/<slug>.md`.
-- **System overview** — read `docs/app/systems/<slug>.md`.
-- **Data asset** — read `docs/app/datasets/<slug>.md`, `docs/app/tables/<slug>.md`, or `docs/app/pipelines/<slug>.md`.
+- **System overview** — read `docs/app/systems/<context>/<slug>.md`.
+- **Data asset** — read `docs/app/datasets/<slug>.md`, `docs/app/tables/<context>/<slug>.md`, or `docs/app/pipelines/<slug>.md`.
 - **Open-ended** — scan `docs/app/index.md` and the most relevant directory indexes, then read the top matches.
 
 ## Rules

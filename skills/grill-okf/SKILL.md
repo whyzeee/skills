@@ -5,7 +5,7 @@ description: Interview the user relentlessly about a plan, design, or domain, th
 
 # /grill-okf
 
-Run a relentless interview about a plan, design, or domain problem. Capture resolved decisions as OKF concept files under `docs/app/decisions/` and glossary terms under `docs/app/concepts/`.
+Run a relentless interview about a plan, design, or domain problem. Capture resolved decisions as OKF concept files under `docs/app/decisions/` and glossary terms under `docs/app/concepts/`. Place each concept in the correct context subdirectory; infer the context from the codebase or ask the user if it is ambiguous.
 
 ## Quick start
 
@@ -38,7 +38,7 @@ What we decided.
 What this makes easier, harder, or impossible.
 ```
 
-A glossary term (`docs/app/concepts/<slug>.md`):
+A glossary term (`docs/app/concepts/<context>/<slug>.md`):
 
 ```markdown
 ---
@@ -64,7 +64,7 @@ Links to related concepts and decisions.
 ## Rules
 
 - Ask one question at a time. Wait for an answer before the next question.
-- When the user uses vague or overloaded terms, propose a precise canonical term and write it to `docs/app/concepts/`.
+- When the user uses vague or overloaded terms, propose a precise canonical term and write it to `docs/app/concepts/` in the correct context subdirectory.
 - When a trade-off resolves, write it to `docs/app/decisions/`.
 - Update `docs/app/index.md` after adding new concepts or decisions.
 - Append a one-line entry to `docs/app/log.md` under today's date for every concept created or meaningfully changed.
