@@ -29,12 +29,25 @@ Context subdirectories include their own `index.md` for progressive disclosure, 
 
 Most projects lose context the moment the original developer steps away. Agent skills can keep that context alive by making the repo itself the source of truth: decisions, glossary terms, systems, and playbooks live next to the code, not in a separate wiki. The concept of clarifying decisions, glossary terms, and systems is inspired by [Matt Pocock's skills](https://github.com/mattpocock/skills). OKF provides a lightweight markdown-first format for that knowledge, and coding harness' skill system lets agents read and write it on demand.
 
+## Tools
+
+`/setup-okf` copies a small Python helper, `okf-tool`, into the target repo under `scripts/okf/`. It is used by the OKF skills to keep the bundle consistent:
+
+```bash
+python -m scripts.okf.cli index      # regenerate all index.md files
+python -m scripts.okf.cli validate   # check required frontmatter, links, orphans
+python -m scripts.okf.cli log "..."  # append to docs/app/log.md
+python -m scripts.okf.cli viz        # generate docs/viz.html graph
+```
+
+It requires only Python stdlib; PyYAML is used if installed, otherwise a minimal frontmatter parser handles simple key-value YAML.
+
 ## Technologies and references
 
 - **harness** agent skill format (markdown with YAML frontmatter, progressive disclosure, command-style invocation names).
 - **OKF v0.1** for the knowledge-base layout and concept file conventions.
 - **Matt Pocock's setup skill** for triage-label conventions and agent-instruction structure.
-- **Markdown + git** for portability; no runtime dependencies beyond the agent.
+- **Markdown + git + Python stdlib** for portability; no runtime dependencies beyond the agent and Python.
 
 ## Intention
 
@@ -52,6 +65,6 @@ Each skill's full behavior is documented in its own `SKILL.md` under `skills/<na
 
 ## Future enhancements
 
-- **Visualization** — generate a browsable graph view of the OKF bundle (concepts, decisions, systems, tables, cross-links). A static HTML page using [Cytoscape.js](https://js.cytoscape.org/) is the simplest path: read the bundle, build a JSON graph, and ship one self-contained file.
-- **Evaluation metrics** — measure OKF quality and coverage over time: concept coverage against the codebase, decision freshness, broken cross-links, glossary accuracy, and `/refer-okf` answer precision. Start with a small script that counts stubs, orphan files, and missing links.
+- **Visualization** ✅ delivered via `okf-tool viz`.
+- **Evaluation metrics** — partially covered by `okf-tool validate` (broken links, orphan concepts, missing frontmatter). Extend later with concept coverage against the codebase, decision freshness, and glossary accuracy.
 - **Automatic grounding** — make other skills consult the OKF bundle without requiring the user to type `/refer-okf`. The repo's agent instructions (`docs/agents/okf.md`) can instruct all skills to read `docs/app/index.md` first when answering project questions, so grounding becomes the default behavior.

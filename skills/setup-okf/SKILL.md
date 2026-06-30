@@ -75,14 +75,16 @@ Contexts can be nested from broad to narrow, e.g. `concepts/<feature>/<role>/<te
 ### 3. Create the OKF bundle
 
 - Create `docs/app/` and the chosen subdirectories.
-- Create `docs/app/index.md` and `docs/app/log.md`.
+- Create a stub `docs/app/log.md` with `# Log\n\n`.
 - If `README.md` exists, merge its content into `docs/app/index.md` but keep `README.md`.
 - If `CONTEXT.md` exists, merge its content into `docs/app/index.md` as a glossary/concepts section.
 - Do **not** touch `guides/` or `docs/guides/`.
 - Migrate existing ADRs from `docs/adr/` into `docs/app/decisions/` as OKF concept files, then remove the original ADR files.
-- Create sub-directory `index.md` files for each context directory that needs progressive disclosure.
-- Update `docs/app/index.md` to list the new concept directories and contexts. The root `index.md` may inline the contents of sub-directory `index.md` files so agents can scan the whole knowledge base from one file.
-- Append an initialization entry to `docs/app/log.md`.
+- Copy `tools/okf/` from this repo into the target repo under `scripts/okf/`.
+- Copy `skills/setup-okf/okf-spec.md` from this repo to `docs/agents/okf-spec.md`.
+- Run `python -m scripts.okf.cli log "Initialized OKF bundle"` to create the first log entry.
+- Run `python -m scripts.okf.cli index` to generate all `index.md` files. Do not hand-edit `index.md` files after this; regenerate them with `okf-tool index` instead.
+- Run `python -m scripts.okf.cli validate` and add any `**To document**: ...` gaps found to `docs/app/log.md` via `okf-tool log`.
 
 ### 4. Explore the codebase for missing OKF pieces
 
@@ -95,8 +97,8 @@ After scaffolding OKF, explore the code to find concepts not yet documented:
 
 For each gap, either:
 
-- Write a stub OKF concept file with a `type` and `description` in the inferred context path, or
-- Add it to a running list in `docs/app/log.md` as `**To document**: ...` if it needs user input first.
+- Write a stub OKF concept file with a `type` and `description` in the inferred context path, then run `python -m scripts.okf.cli index` and `python -m scripts.okf.cli log "Stubbed <relative-path>"`, or
+- Add it to a running list in `docs/app/log.md` as `**To document**: ...` via `okf-tool log` if it needs user input first.
 
 Present a short summary of what was documented and what remains to be grilled.
 
@@ -136,16 +138,12 @@ Write `docs/agents/domain.md` describing the layout.
 
 ### 8. OKF agent instructions
 
-Write `docs/agents/okf.md` telling other skills how to read and write OKF in this repo. Include:
+Write `docs/agents/okf.md` telling other skills how to read and write OKF in this repo. Keep it short and point to `docs/agents/okf-spec.md` for details. Include:
 
 - This repo uses OKF v0.1 under `docs/app/`.
-- Concepts are markdown files with YAML frontmatter; `type` is required.
-- Reserved filenames: `docs/app/index.md`, `docs/app/log.md`.
-- Cross-links should be bundle-relative from `docs/app/` (e.g., `/concepts/sales/order.md` or `/tables/source_users/users.md`).
-- New domain terms go under `docs/app/concepts/`, inside the appropriate context subdirectory. Infer the context from the codebase; ask the user if it is ambiguous.
-- New design decisions go under `docs/app/decisions/`, grouped by context only when the codebase has clear bounded contexts.
-- After adding or changing a concept, update `docs/app/index.md` and append to `docs/app/log.md`.
-- Include the concept templates from `/grill-okf`.
+- See `docs/agents/okf-spec.md` for bundle structure, required frontmatter, and cross-link conventions.
+- `okf-tool` is available under `scripts/okf/`; use `python -m scripts.okf.cli index` after changing concepts, `python -m scripts.okf.cli log "message"` to log changes, and `python -m scripts.okf.cli validate` to catch broken links or missing frontmatter.
+- Run `python -m scripts.okf.cli viz` to regenerate `docs/viz.html` for browsing the knowledge graph.
 - Mention that `/refer-okf` is the preferred skill for querying OKF and that other skills should rely on it for OKF-backed answers.
 
 ### 9. Agent skills block

@@ -9,11 +9,12 @@ Answer questions using only the OKF knowledge bundle under `docs/app/`. Read `do
 
 ## Quick start
 
-1. Read `docs/app/index.md` to find the concept directories and contexts. The root index may inline sub-directory indexes.
-2. Identify which concepts are relevant to the user's question.
-3. Read those concept files directly; only read a sub-directory `index.md` if the root index is insufficient to locate the concept.
-4. Follow cross-links (`/concepts/...`, `/decisions/...`, `/systems/...`) until you have enough context.
-5. Answer the question, citing the concept files you used.
+1. Optionally run `python -m scripts.okf.cli validate` to surface any broken links or missing frontmatter. If issues exist, mention them briefly before answering; do not block the answer on them.
+2. Read `docs/app/index.md` to find the concept directories and contexts. The root index may inline sub-directory indexes.
+3. Identify which concepts are relevant to the user's question.
+4. Read those concept files directly; only read a sub-directory `index.md` if the root index is insufficient to locate the concept.
+5. Follow cross-links (`/concepts/...`, `/decisions/...`, `/systems/...`) until you have enough context.
+6. Answer the question, citing the concept files you used. If `docs/viz.html` exists, you may mention it as a browsable view of the knowledge graph.
 
 ## Query patterns
 

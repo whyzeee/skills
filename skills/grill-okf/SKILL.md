@@ -11,7 +11,10 @@ Run a relentless interview about a plan, design, or domain problem. Capture reso
 
 1. Ask the user what they want to grill: a feature, a design, a domain model, or a current problem.
 2. Interview them one question at a time. Probe edge cases, dependencies, and terminology.
-3. Each time a decision or term resolves, write it as an OKF concept file and update `docs/app/index.md` and `docs/app/log.md`.
+3. Each time a decision or term resolves, write it as an OKF concept file.
+4. Run `python -m scripts.okf.cli log "Created/updated <relative-path>"` for each concept written or meaningfully changed.
+5. At the end of the session, run `python -m scripts.okf.cli index` to regenerate all `index.md` files.
+6. Optionally run `python -m scripts.okf.cli validate` and offer to fix any broken links or missing frontmatter before finishing.
 
 ## Concept templates
 
@@ -66,7 +69,8 @@ Links to related concepts and decisions.
 - Ask one question at a time. Wait for an answer before the next question.
 - When the user uses vague or overloaded terms, propose a precise canonical term and write it to `docs/app/concepts/` in the correct context subdirectory.
 - When a trade-off resolves, write it to `docs/app/decisions/`.
-- Update `docs/app/index.md` after adding new concepts or decisions.
-- Append a one-line entry to `docs/app/log.md` under today's date for every concept created or meaningfully changed.
+- Use `python -m scripts.okf.cli index` to regenerate `docs/app/index.md` and sub-directory indexes after adding or changing concepts. Do not hand-edit `index.md` files.
+- Use `python -m scripts.okf.cli log "Created/updated <relative-path>"` for every concept created or meaningfully changed.
+- See `docs/agents/okf-spec.md` for the authoritative bundle structure, required frontmatter, and cross-link conventions.
 - Do not create concepts or decisions before the user agrees on the content.
-- Bundle-relative links inside OKF should start from `docs/app/` (e.g., `/decisions/0001-use-postgres.md`).
+- Bundle-relative links inside OKF should start from `docs/app/` with a `.md` extension (e.g., `/decisions/0001-use-postgres.md`).
