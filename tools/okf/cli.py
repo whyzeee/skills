@@ -24,7 +24,12 @@ def _cmd_validate(args: argparse.Namespace) -> int:
     result = validate(Path(args.cwd))
     broken = result.get("broken", [])
     orphans = result.get("orphans", [])
+    missing_fm = result.get("missing_frontmatter", [])
 
+    if missing_fm:
+        print("Missing frontmatter:")
+        for m in missing_fm:
+            print(f"  {m}")
     if broken:
         print("Broken links:")
         for b in broken:
@@ -33,8 +38,8 @@ def _cmd_validate(args: argparse.Namespace) -> int:
         print("Orphan concepts:")
         for o in orphans:
             print(f"  {o}")
-    if not broken and not orphans:
-        print("OK: no broken links or orphan concepts")
+    if not missing_fm and not broken and not orphans:
+        print("OK: no missing frontmatter, broken links, or orphan concepts")
         return 0
     return 1
 

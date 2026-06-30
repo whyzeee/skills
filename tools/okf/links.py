@@ -27,12 +27,18 @@ def validate(cwd: Path = Path(".")) -> dict[str, list[str]]:
 
     broken: list[str] = []
     orphans: list[str] = []
+    missing_frontmatter: list[str] = []
 
     for doc in docs:
+        rel = doc.path.relative_to(root).as_posix()
+        missing = doc.missing_required_keys()
+        if missing:
+            missing_frontmatter.append(f"{rel}: missing {', '.join(missing)}")
+
         for link in doc.links():
             target = _resolve(root, link)
             if target not in existing:
-                broken.append(f"{doc.path.relative_to(root).as_posix()} -> {link}")
+                broken.append(f"{rel} -> {link}")
 
     linked_to: set[str] = set()
     for doc in docs:
@@ -44,7 +50,7 @@ def validate(cwd: Path = Path(".")) -> dict[str, list[str]]:
         if linked_to and rel not in linked_to and not rel.startswith("/index"):
             orphans.append(rel)
 
-    return {"broken": broken, "orphans": orphans}
+    return {"broken": broken, "orphans": orphans, "missing_frontmatter": missing_frontmatter}
 
 
 def _normalize(root: Path, path: Path) -> str:
