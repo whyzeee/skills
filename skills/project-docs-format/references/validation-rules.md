@@ -17,13 +17,13 @@ Sort rows by normalized path using simple code-point order, with no locale, file
 
 ## Links
 
-Validate the target file of every internal inline link. Ignore heading anchors because renderer slug rules are outside the contract. Ignore links inside standard backtick or tilde fenced code blocks for navigation validation.
+Validate the target file of every internal inline link. Internal links use inline Markdown syntax; reference-style definitions may target only syntactically valid external URLs. Ignore heading anchors because renderer slug rules are outside the contract. Ignore links inside standard backtick or tilde fenced code blocks for navigation validation.
 
 A resolved internal path may reach source outside `docs/` but may not escape the repository root. External URLs receive syntax validation only; validation makes no network requests.
 
 Repair a broken internal link automatically only when a Git-detected rename or a unique case/separator normalization identifies one target. Multiple plausible targets require a decision.
 
-For each Source References row, validate all of these together:
+A non-`None` Source References section is a fixed table with exactly `Path | Component | Description`. Each row uses ``[`repository/path`](document-relative-target) | `component-or-symbol` | substantive description``. Validate all of these together:
 
 - displayed path is repository-relative and uses `/`;
 - target is document-relative and uses `/`;
@@ -35,7 +35,7 @@ For each Source References row, validate all of these together:
 
 ## Filesystem and encoding
 
-Non-Markdown assets need no frontmatter. Validate their internal links when the format supports links, and include assets below `docs/app/` in `STRUCTURE.md`.
+Non-Markdown assets need no frontmatter. Validate `href` and `src` attributes in HTML, SVG, and XML, plus `url(...)` targets in CSS. Include assets below `docs/app/` in `STRUCTURE.md`.
 
 Markdown must be valid UTF-8. Removing a UTF-8 BOM is deterministic; conversion from another encoding is not. Preserve each existing file's line endings. A new file follows the repository's dominant Markdown line ending, falling back to LF.
 
