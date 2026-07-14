@@ -1,6 +1,6 @@
 ---
 name: audit-project-docs
-description: Use when auditing repository-native project documentation for contract violations or applying deterministic repairs.
+description: Use when auditing repository-native project documentation, checking docs related to changed source, or applying deterministic repairs.
 ---
 
 # Audit Project Documentation
@@ -29,6 +29,25 @@ The validator checks controlled schemas plus recursive documentation paths, inli
 3. Report the final status and any `FAILED` path. Status 0 means deterministic repairs completed and revalidation passed; status 1 means documentation errors remain; status 2 means invocation, Git protection, or filesystem execution failed. Completion: the result distinguishes applied repairs from remaining semantic work.
 
 The fixer operates on current file contents. It may normalize unambiguous metadata representation, remove UTF-8 BOMs, regenerate an existing application structure index, and update a stale internal link when exactly one case/separator match or Git-detected rename proves the destination. It does not create missing metadata, sections, placeholders, or `None` values. Every planned buffer is revalidated; if the complete plan is unsafe, it aborts before writing.
+
+## Routine audit
+
+Use this workflow by default when the user asks to audit documentation rather than only check its format.
+
+1. Resolve the Git top level and record which documentation files are already dirty or untracked before any repair. Completion: the selected root and the pre-existing documentation changes are known.
+2. Run **Fix** once. Retain every deterministic diagnostic and modified path; status 2 stops the audit. Completion: the complete documentation contract has been validated and every safe deterministic repair has either been applied or reported.
+3. Build the changed-source set from staged, unstaged, renamed, deleted, and untracked paths. Compare tracked work to `HEAD`, include both sides of renames, and add `git ls-files --others --exclude-standard`; if `HEAD` does not exist, treat all tracked and untracked project files as changed. Exclude the documentation files being audited, but do not exclude a source path merely because of its language or directory name. Completion: every current Git change is classified as documentation or source.
+4. Read valid `Source References` rows from the documentation. Associate changed source only by an exact repository-relative file path or by an explicit directory path ending `/`; a directory reference matches descendants on the path-segment boundary. Completion: each explicit match names both the changed source path and its related documents.
+5. For each unmatched changed source path, inspect only enough of its diff or current contents to decide whether it changes documented behavior, interfaces, data shape, configuration, operations, architecture, or project language. Record either one semantic finding or a concrete reason no documentation inspection is warranted. Completion: every unmatched changed path is accounted for without deriving a map from names, ASTs, or source-tree shape.
+6. Compare each matched document with the relevant changed source. Treat contradictory implementation facts, stale behavior, terminology choices, architecture changes, and multiple plausible destinations as semantic findings. Completion: every explicit source-to-document match has an evidence-backed result.
+7. Present the semantic findings together, naming the source evidence, affected document, proposed meaning-level change, and whether that document was already dirty. Ask before every semantic edit; require an explicit choice before editing a dirty document. Apply only approved edits to the current contents and mark every declined item as deferred. Completion: every semantic finding is approved, resolved, or explicitly deferred.
+8. After approved edits, run **Fix** again; otherwise retain the validation result from step 2. Completion: deterministic validation has run after the final mutation, every remaining error is reported, and the final summary separates deterministic repairs, semantic edits, and deferred findings.
+
+Source References in project documentation are the only persistent source-to-document map. Keep audit notes in the result, not in a generated index, mirror, or configuration file.
+
+## Full source audit
+
+Enter this branch only when the user explicitly requests a full source-repository audit. Replace step 3's changed-source set with the user-approved source scope from tracked project files, then perform the same explicit-reference matching, evidence inspection, confirmation, and final validation. Do not infer this branch from a routine audit and do not turn its findings into a secondary map.
 
 ## Maintainer verification
 
