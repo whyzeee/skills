@@ -9,6 +9,8 @@ description: Use when setting up canonical repository-native documentation or mi
 
 Load [`project-docs-format`](../project-docs-format/SKILL.md) before inspecting or proposing documentation. It owns the canonical shape and authored-document rules. This skill selects the smallest project-specific shape, writes only approved substantive documents, and delegates deterministic repair and validation to [`audit-project-docs`](../audit-project-docs/SKILL.md).
 
+When setup would create, migrate, supersede, or consolidate a decision or local issue, load its lifecycle in [`project-docs-format/references/document-kinds.md`](../project-docs-format/references/document-kinds.md) before proposing paths or content. Before a lifecycle mutation, make a disposable OS-temporary Git copy of the exact worktree, apply the complete proposed operation and `audit-project-docs` **Fix** there, and capture the full path-and-byte delta. Disclose every changed or removed path, including unrelated and already-dirty files, and obtain explicit approval for that exact delta. Remove the candidate, apply the approved operation to the project, rerun **Fix**, and require the resulting path-and-byte delta to match the approved candidate exactly; stop and report any mismatch. File-list, mapping, source-authority, and retirement approvals remain required but do not replace this mutation approval.
+
 After inspection, choose one branch:
 
 - **Fresh setup:** no authoritative knowledge needs relocation. Use **Propose fresh setup** and **Write the approved fresh set**.

@@ -9,6 +9,8 @@ description: Use when interviewing a user to resolve and immediately capture pro
 
 Load [`project-docs-format`](../project-docs-format/SKILL.md) before selecting or writing a destination. It owns canonical document kinds and meaning boundaries. Use [`audit-project-docs`](../audit-project-docs/SKILL.md) **Fix** after every write; it is the sole deterministic repair and validation implementation.
 
+When the topic would create, supersede, or consolidate a decision or local issue, load its lifecycle in [`project-docs-format/references/document-kinds.md`](../project-docs-format/references/document-kinds.md) before choosing the next question or proposing a destination. Treat every applicability, identifier, history, and duplicate gate as part of the atomic fact and candidate diff.
+
 This is a topic-scoped interview, not a repository audit. Ask exactly one question at a time, wait for its answer, and keep no transcript, interview note, scratch document, or second source of truth.
 
 ## Protect the project

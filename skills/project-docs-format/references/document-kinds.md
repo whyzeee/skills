@@ -97,7 +97,13 @@ Type: `decision`. Filename: `NNNN-short-title.md`.
 
 `Status` is exactly one of `proposed`, `accepted`, `superseded`, or `rejected`.
 
-Allocate the identifier as the highest existing decision number plus one, zero-padded to four digits. Never reuse a gap or renumber a file. An accepted decision permits only non-semantic correction. An architecture change creates a new decision, marks the old decision `superseded`, and links both directions.
+### Decision lifecycle
+
+Before creating a decision, inspect `docs/decisions/NNNN-*.md` names in the current tree and reachable Git history. Allocate the maximum numeric prefix ever observed plus one, zero-padded to four digits; start at `0001` only when none has ever existed. Existing and deleted identifiers are immutable: never fill a gap, renumber, or reuse a removed number.
+
+An `accepted` decision permits non-semantic corrections only. When architecture departs from an accepted decision, create a new decision under the next identifier, set the old decision to `superseded`, and add relative links in both documents. The new decision states the replacement and its status; never rewrite the accepted history to make it appear current.
+
+Completion: allocation considered every existing identifier, each status is controlled, and shared validation passes with both directions of every supersession link intact.
 
 ## Domain glossary
 
@@ -158,6 +164,12 @@ Type: `issue`. Filename: `NNNN-short-title.md`.
 
 `Status` is exactly one of `open`, `in-progress`, `blocked`, or `closed`.
 
-Use local issues only when no external tracker applies. A GitHub or GitLab remote is evidence of an external tracker unless issues are explicitly disabled; absent or custom remote evidence requires an applicability decision.
+### Local-issue applicability and lifecycle
 
-Allocate the identifier as the highest existing local-issue number plus one, zero-padded to four digits. Never reuse a gap or renumber a file. Merge duplicates automatically only when every duplicate is `open`: retain the lowest identifier, combine compatible content, repair inbound links, and remove redundant files without reusing their numbers. Any other status or conflicting content requires a human decision.
+Inspect configured Git remotes before creating or consolidating a local issue. A GitHub or GitLab remote means its external tracker applies unless the user explicitly states that repository issues are disabled. When no remote exists or every remote is custom, ask exactly once whether this project uses local issue documents; create none unless the answer is yes.
+
+Before creating an applicable local issue, inspect `docs/issues/NNNN-*.md` names in the current tree and reachable Git history. Allocate the maximum numeric prefix ever observed plus one, zero-padded to four digits; start at `0001` only when none has ever existed. Existing and deleted identifiers are immutable: never fill a gap, renumber, or reuse a removed number.
+
+Before adding an issue, compare its problem and acceptance criteria with existing local issues. Merge duplicates automatically only when every duplicate has status `open` and their meaning is compatible: retain the lowest identifier, combine the substantive content once, repair every inbound documentation link to the retained path, and remove the redundant files through the calling workflow's approved candidate diff. This automatic consolidation never bypasses the calling workflow's source-authority or mutation-approval gates; during migration it runs only after every source and included fact set is explicitly approved. A duplicate that is `in-progress`, `blocked`, or `closed`, or any semantic conflict, requires an explicit user resolution; preserve every file until then.
+
+Completion: tracker applicability is established, every identifier is stable, every automatic merge satisfies all-open and compatible-content gates, all inbound links resolve, and shared validation passes.

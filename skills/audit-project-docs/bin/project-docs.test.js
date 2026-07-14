@@ -651,3 +651,28 @@ test('fix aborts its complete plan before writing when encoding is unsafe', () =
   assert.match(fixed.stderr, /aborted before writing/i);
   assert.deepEqual([...readmeAfter.subarray(0, 3)], [0xef, 0xbb, 0xbf]);
 });
+
+test('completed lifecycle output validates and setup and interview reach the shared rules', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'project-docs-test-'));
+  const write = (relativePath, content) => {
+    const target = path.join(root, relativePath);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, content);
+  };
+  const frontmatter = (type, title, description) => `---\ntype: ${type}\ntitle: ${title}\ndescription: ${description}\ntags: []\ntimestamp: '2026-07-14T00:00:00Z'\n---\n\n`;
+  const decision = (status, title, description, related) => `${frontmatter('decision', title, description)}# Status\n${status}\n# Context\nThe deployment requirements changed.\n# Decision\nUse the documented architecture.\n# Alternatives Considered\nRetain the prior architecture.\n# Consequences\nThe replacement is explicit.\n# Related Documentation\n${related}\n`;
+  write('docs/decisions/0007-old-architecture.md', decision('superseded', 'Old architecture', 'Records the superseded architecture.', '[Decision 0008](0008-new-architecture.md)'));
+  write('docs/decisions/0008-new-architecture.md', decision('accepted', 'New architecture', 'Records the replacement architecture.', '[Decision 0007](0007-old-architecture.md)'));
+  write('docs/issues/0004-document-release.md', `${frontmatter('issue', 'Document release', 'Tracks release documentation work.')}# Status\nopen\n# Problem\nRelease steps are undocumented.\n# Acceptance Criteria\nRelease steps are reviewable.\n## To-do Actions\n- [ ] Document release steps.\n# Notes\nRetained as the lowest compatible open duplicate.\n# Related Documentation\nNone\n`);
+  spawnSync('git', ['init', '-q', root], { encoding: 'utf8' });
+
+  const result = spawnSync(process.execPath, [cli, 'check', root], { encoding: 'utf8' });
+  const setup = fs.readFileSync(path.join(__dirname, '..', '..', 'setup-project-docs', 'SKILL.md'), 'utf8');
+  const interview = fs.readFileSync(path.join(__dirname, '..', '..', 'ask-project-docs', 'SKILL.md'), 'utf8');
+  fs.rmSync(root, { recursive: true, force: true });
+
+  assert.equal(result.status, 0, result.stderr + result.stdout);
+  assert.match(setup, /full path-and-byte delta/);
+  assert.match(setup, /match the approved candidate exactly/);
+  assert.match(interview, /applicability, identifier, history, and duplicate gate/);
+});
