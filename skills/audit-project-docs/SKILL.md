@@ -9,7 +9,7 @@ description: Use when auditing repository-native project documentation for contr
 
 Load [`project-docs-format`](../project-docs-format/SKILL.md) before interpreting findings or changing documentation. That skill owns the schemas and severity rules; this skill owns their deterministic implementation.
 
-The validator lives in this skill and adds nothing to the target repository. `check` is read-only. `fix` is reserved for deterministic repair and currently exits with status 2 until that operation ships.
+The validator lives in this skill and adds nothing to the target repository. Use `fix` for an audit unless the user requests read-only validation; use `check` for that read-only branch. `fix` requires the selected root to be a Git project root.
 
 ## Check
 
@@ -19,6 +19,14 @@ The validator lives in this skill and adds nothing to the target repository. `ch
 4. Report the result: status 0 is valid, including warnings; status 1 means validation errors remain; status 2 means invocation or internal failure. Completion: every reported error and the single consolidated warning are represented without inventing semantic fixes.
 
 The check is complete only when the validator has inspected the selected root and returned one of those statuses. A missing Node runtime or status 2 is a failed invocation, not a documentation result.
+
+## Fix
+
+1. Confirm `node` is available and the selected directory is the Git project root. Completion: `node --version` and `git -C <project-root> rev-parse --show-toplevel` succeed and identify that directory.
+2. Run `node <skill-directory>/bin/project-docs.js fix <project-root>`. The validator precomputes every write before mutation, then atomically replaces only files with deterministic repairs. Completion: the process reports each `FIXED` path and performs its final `check`.
+3. Report the final status and any `FAILED` path. Status 0 means deterministic repairs completed and revalidation passed; status 1 means documentation errors remain; status 2 means invocation, Git protection, or filesystem execution failed. Completion: the result distinguishes applied repairs from remaining semantic work.
+
+The fixer operates on current file contents. It may normalize unambiguous metadata representation, remove UTF-8 BOMs, and regenerate an existing application structure index; it does not create missing metadata, sections, placeholders, or `None` values. If the complete plan is unsafe, it aborts before writing.
 
 ## Maintainer verification
 

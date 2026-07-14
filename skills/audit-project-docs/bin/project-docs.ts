@@ -3,6 +3,8 @@ declare const process: any;
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { execFileSync } = require('node:child_process');
+const { randomBytes } = require('node:crypto');
 
 const TYPES = new Set(['data', 'interface', 'logic', 'guide', 'agent', 'decision', 'domain', 'structure', 'issue']);
 const KEYS = ['type', 'title', 'description', 'tags', 'timestamp'];
@@ -245,7 +247,148 @@ function walk(directory: string): string[] {
   return files;
 }
 
-function check(root: string): number {
+type StructureRow = { path: string; kind: 'Directory' | 'Document' | 'Asset'; description: string };
+type PlannedWrite = { path: string; rel: string; content: Uint8Array };
+
+function compareCodePoints(left: string, right: string): number {
+  const a = Array.from(left, (character) => character.codePointAt(0) || 0);
+  const b = Array.from(right, (character) => character.codePointAt(0) || 0);
+  for (let index = 0; index < Math.min(a.length, b.length); index += 1) {
+    if (a[index] !== b[index]) return a[index] - b[index];
+  }
+  return a.length - b.length;
+}
+
+function escapeCell(value: string): string {
+  return value.replace(/\|/g, '\\|');
+}
+
+function structureTable(root: string): string | null {
+  const app = path.join(root, 'docs', 'app');
+  if (!fs.existsSync(app) || !fs.statSync(app).isDirectory()) return null;
+  const rows: StructureRow[] = [];
+  const decoder = new TextDecoder('utf-8', { fatal: true });
+  const visit = (directory: string): boolean => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const target = path.join(directory, entry.name);
+      const rel = path.relative(app, target).split(path.sep).join('/');
+      if (entry.isDirectory()) {
+        const description = rel === 'data' ? 'Data-system documentation.'
+          : rel === 'interface' ? 'User-facing interface documentation.'
+            : rel === 'logic' ? 'Business-logic documentation.' : 'Documentation directory.';
+        rows.push({ path: `${rel}/`, kind: 'Directory', description });
+        if (!visit(target)) return false;
+      } else if (entry.isFile() && rel !== 'STRUCTURE.md') {
+        if (rel.toLowerCase().endsWith('.markdown')) return false;
+        if (rel.toLowerCase().endsWith('.md')) {
+          let text: string;
+          try {
+            text = decoder.decode(fs.readFileSync(target));
+          } catch {
+            return false;
+          }
+          const parsed = parseFrontmatter(text.replace(/^\uFEFF/, ''), `docs/app/${rel}`, []);
+          const description = parsed?.metadata.description;
+          if (typeof description !== 'string' || !description) return false;
+          rows.push({ path: rel, kind: 'Document', description });
+        } else {
+          rows.push({ path: rel, kind: 'Asset', description: 'Supporting asset.' });
+        }
+      }
+    }
+    return true;
+  };
+  if (!visit(app)) return null;
+  rows.sort((left, right) => compareCodePoints(left.path, right.path));
+  return ['| Path | Kind | Description |', '|---|---|---|', ...rows.map((row) => `| ${escapeCell(row.path)} | ${row.kind} | ${escapeCell(row.description)} |`)].join('\n');
+}
+
+function repositoryLineEnding(root: string): '\n' | '\r\n' {
+  let crlf = 0;
+  let lf = 0;
+  const files = [...['README.md', 'AGENTS.md'].map((rel) => path.join(root, rel)), ...walk(path.join(root, 'docs'))];
+  for (const file of files) {
+    if (!fs.existsSync(file) || !fs.statSync(file).isFile() || !file.toLowerCase().endsWith('.md')) continue;
+    const bytes: Uint8Array = fs.readFileSync(file);
+    for (let index = 0; index < bytes.length; index += 1) {
+      if (bytes[index] !== 0x0a) continue;
+      if (index > 0 && bytes[index - 1] === 0x0d) crlf += 1;
+      else lf += 1;
+    }
+  }
+  return crlf > lf ? '\r\n' : '\n';
+}
+
+function normalizeMetadata(text: string): string {
+  const withoutBom = text.replace(/^\uFEFF/, '');
+  const parts = withoutBom.split(/(\r\n|\n)/);
+  const lines = parts.filter((_, index) => index % 2 === 0);
+  const end = lines.indexOf('---', 1);
+  const diagnostics: Diagnostic[] = [];
+  const parsed = parseFrontmatter(withoutBom, '', diagnostics);
+  if (!parsed || diagnostics.length || end < 0) return withoutBom;
+  for (let index = 1; index < end; index += 1) {
+    const match = /^([a-z]+):(.*)$/.exec(lines[index]);
+    if (!match || !KEYS.includes(match[1])) continue;
+    if (match[1] === 'tags') {
+      lines[index] = match[2].trim() === '[]' ? 'tags: []' : 'tags:';
+      while (index + 1 < end && /^  - /.test(lines[index + 1])) {
+        index += 1;
+        lines[index] = `  - ${lines[index].slice(4).trim()}`;
+      }
+    } else if (match[1] === 'timestamp') {
+      lines[index] = `timestamp: '${String(parsed.metadata.timestamp)}'`;
+    } else {
+      lines[index] = `${match[1]}: ${match[2].trim()}`;
+    }
+  }
+  for (let index = 0; index < lines.length; index += 1) parts[index * 2] = lines[index];
+  return parts.join('');
+}
+
+function replaceStructureBody(text: string, table: string, generatedEol: '\n' | '\r\n'): string | null {
+  const withoutBom = text.replace(/^\uFEFF/, '');
+  const parts = withoutBom.split(/(\r\n|\n)/);
+  const lines = parts.filter((_, index) => index % 2 === 0);
+  const end = lines.indexOf('---', 1);
+  if (lines[0] !== '---' || end < 0) return null;
+  const prefix = parts.slice(0, end * 2 + 1).join('');
+  const closingEol = parts[end * 2 + 1] || generatedEol;
+  return `${prefix}${closingEol}${generatedEol}${table.replace(/\n/g, generatedEol)}${generatedEol}`;
+}
+
+function atomicReplace(write: PlannedWrite): void {
+  const temporary = path.join(path.dirname(write.path), `.project-docs-${process.pid}-${randomBytes(6).toString('hex')}.tmp`);
+  const mode = fs.statSync(write.path).mode;
+  try {
+    fs.writeFileSync(temporary, write.content, { flag: 'wx', mode });
+    fs.renameSync(temporary, write.path);
+  } finally {
+    fs.rmSync(temporary, { force: true });
+  }
+}
+
+function equalBytes(left: Uint8Array, right: Uint8Array): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+
+function validatePlannedWrites(writes: Map<string, PlannedWrite>): Diagnostic[] {
+  const diagnostics: Diagnostic[] = [];
+  const decoder = new TextDecoder('utf-8', { fatal: true });
+  for (const [rel, write] of [...writes.entries()].sort(([left], [right]) => compareCodePoints(left, right))) {
+    try {
+      const text = decoder.decode(write.content);
+      if (!rel.startsWith('docs/') || !rel.toLowerCase().endsWith('.md')) continue;
+      const parsed = parseFrontmatter(text, rel, diagnostics);
+      if (parsed) validateDocument(rel, parsed, diagnostics);
+    } catch {
+      diagnostics.push({ level: 'error', path: rel, message: 'planned output is not valid UTF-8' });
+    }
+  }
+  return diagnostics.filter((diagnostic) => diagnostic.level === 'error');
+}
+
+function inspect(root: string): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
   const expected = ['README.md', 'AGENTS.md', 'docs/DOMAIN.md', 'docs/app/STRUCTURE.md'];
   const missing = expected.filter((rel) => !fs.existsSync(path.join(root, rel)));
@@ -268,8 +411,12 @@ function check(root: string): number {
   for (const rel of ['README.md', 'AGENTS.md']) {
     const file = path.join(root, rel);
     if (!fs.existsSync(file)) continue;
+    const bytes = fs.readFileSync(file);
     try {
-      decoder.decode(fs.readFileSync(file));
+      decoder.decode(bytes);
+      if (bytes.length >= 3 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) {
+        diagnostics.push({ level: 'error', path: rel, message: 'UTF-8 BOM must be removed' });
+      }
     } catch {
       diagnostics.push({ level: 'error', path: rel, message: 'invalid UTF-8' });
     }
@@ -282,16 +429,31 @@ function check(root: string): number {
     }
     if (!rel.toLowerCase().endsWith('.md')) continue;
     let text: string;
+    const bytes = fs.readFileSync(file);
     try {
-      text = decoder.decode(fs.readFileSync(file));
+      text = decoder.decode(bytes);
     } catch {
       diagnostics.push({ level: 'error', path: rel, message: 'invalid UTF-8' });
       continue;
     }
+    if (bytes.length >= 3 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) {
+      diagnostics.push({ level: 'error', path: rel, message: 'UTF-8 BOM must be removed' });
+    }
     const parsed = parseFrontmatter(text, rel, diagnostics);
-    if (parsed) validateDocument(rel, parsed, diagnostics);
+    if (parsed) {
+      validateDocument(rel, parsed, diagnostics);
+      if (rel === 'docs/app/STRUCTURE.md') {
+        const expectedTable = structureTable(root);
+        if (expectedTable !== null && parsed.body.trim() !== expectedTable.trim()) {
+          diagnostics.push({ level: 'error', path: rel, message: 'stale structure index' });
+        }
+      }
+    }
   }
+  return diagnostics;
+}
 
+function report(diagnostics: Diagnostic[]): number {
   for (const diagnostic of diagnostics) {
     console.log(`${diagnostic.level.toUpperCase()}${diagnostic.path ? ` ${diagnostic.path}` : ''}: ${diagnostic.message}`);
   }
@@ -299,6 +461,85 @@ function check(root: string): number {
   const warnings = diagnostics.length - errors;
   console.log(errors ? `INVALID: ${errors} error(s), ${warnings} warning(s)` : `VALID: ${warnings} warning(s)`);
   return errors ? 1 : 0;
+}
+
+function check(root: string): number {
+  return report(inspect(root));
+}
+
+function fix(root: string): number {
+  let gitRoot: string;
+  try {
+    gitRoot = execFileSync('git', ['-C', root, 'rev-parse', '--show-toplevel'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+  } catch {
+    console.error('Fix requires a Git repository.');
+    return 2;
+  }
+  if (path.resolve(gitRoot) !== root) {
+    console.error(`Fix requires the Git project root: ${gitRoot}`);
+    return 2;
+  }
+
+  const diagnostics = inspect(root);
+  const writes = new Map<string, PlannedWrite>();
+  for (const file of [...['README.md', 'AGENTS.md'].map((rel) => path.join(root, rel)), ...walk(path.join(root, 'docs'))]) {
+    if (!fs.existsSync(file) || !fs.statSync(file).isFile()) continue;
+    const rel = path.relative(root, file).split(path.sep).join('/');
+    if (![rel === 'README.md', rel === 'AGENTS.md', rel.toLowerCase().endsWith('.md')].some(Boolean)) continue;
+    const original = fs.readFileSync(file);
+    let content = original;
+    if (content.length >= 3 && content[0] === 0xef && content[1] === 0xbb && content[2] === 0xbf) content = content.subarray(3);
+    if (rel.startsWith('docs/') && rel.toLowerCase().endsWith('.md')) {
+      try {
+        const normalized = normalizeMetadata(new TextDecoder('utf-8', { fatal: true }).decode(content));
+        content = new TextEncoder().encode(normalized);
+      } catch {
+        continue;
+      }
+    }
+    if (!equalBytes(content, original)) writes.set(rel, { path: file, rel, content });
+  }
+
+  const structurePath = path.join(root, 'docs', 'app', 'STRUCTURE.md');
+  const table = structureTable(root);
+  if (fs.existsSync(structurePath) && table !== null) {
+    const current = writes.has('docs/app/STRUCTURE.md')
+      ? new TextDecoder().decode(writes.get('docs/app/STRUCTURE.md')!.content)
+      : fs.readFileSync(structurePath, 'utf8');
+    const replacement = replaceStructureBody(current, table, repositoryLineEnding(root));
+    if (replacement !== null && replacement !== current.replace(/^\uFEFF/, '')) {
+      writes.set('docs/app/STRUCTURE.md', { path: structurePath, rel: 'docs/app/STRUCTURE.md', content: new TextEncoder().encode(replacement) });
+    }
+  }
+
+  const planned = new Set(writes.keys());
+  const deterministic = (diagnostic: Diagnostic): boolean => diagnostic.path != null && planned.has(diagnostic.path) && (
+    ['UTF-8 BOM must be removed', 'stale structure index'].includes(diagnostic.message)
+    || (diagnostic.path === 'docs/app/STRUCTURE.md' && (diagnostic.message === 'invalid body table' || diagnostic.message === 'expected H1 sequence: none'))
+  );
+  const unsafe = diagnostics.filter((diagnostic) => diagnostic.level === 'error' && !deterministic(diagnostic));
+  if (unsafe.length) {
+    console.error('Fix aborted before writing because the complete deterministic plan is unsafe.');
+    return report(diagnostics);
+  }
+  const invalidPlan = validatePlannedWrites(writes);
+  if (invalidPlan.length) {
+    console.error('Fix aborted before writing because a planned output failed validation.');
+    return report([...diagnostics, ...invalidPlan]);
+  }
+
+  let failed = false;
+  for (const write of writes.values()) {
+    try {
+      atomicReplace(write);
+      console.log(`FIXED ${write.rel}`);
+    } catch (error) {
+      failed = true;
+      console.error(`FAILED ${write.rel}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  const status = check(root);
+  return failed ? 2 : status;
 }
 
 function main(): number {
@@ -312,11 +553,7 @@ function main(): number {
     console.error(`Project root is not a directory: ${projectRoot}`);
     return 2;
   }
-  if (operation === 'fix') {
-    console.error('Fix is not available yet; run check.');
-    return 2;
-  }
-  return check(root);
+  return operation === 'fix' ? fix(root) : check(root);
 }
 
 try {

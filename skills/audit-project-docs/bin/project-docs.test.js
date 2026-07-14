@@ -310,3 +310,74 @@ ${decisionBody}`, 'docs/decisions/0001-use-node.md');
   assert.equal(result.status, 1, result.stderr + result.stdout);
   assert.match(result.stdout, /invalid decision status/i);
 });
+
+test('fix regenerates a recursive deterministic structure index and revalidates it', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'project-docs-test-'));
+  const write = (relativePath, content) => {
+    const target = path.join(root, relativePath);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, content);
+  };
+  const frontmatter = (type, title, description) => `---\ntype: ${type}\ntitle: ${title}\ndescription: ${description}\ntags: []\ntimestamp: '2026-07-14T00:00:00Z'\n---\n`;
+  const structureFrontmatter = `---\r\ntype: structure\ntitle: Application structure\r\ndescription: Indexes application documentation.\ntags: []\r\ntimestamp: '2026-07-14T00:00:00Z'\n---\r\n`;
+  write('docs/app/STRUCTURE.md', `${structureFrontmatter}\r\nnot a generated table\r\n`);
+  write('docs/app/data/postgres/public/tables/customers.md', `${frontmatter('data', 'Customers', 'Describes customer records.')}\n# Purpose\nStores customers.\n# Fields\nNone\n# Relationships\n## Within Data\nNone\n## Across Categories\nNone\n# Constraints\nNone\n# Indexes\nNone\n# Source References\nNone\n`);
+  write('docs/app/interface/console.md', `${frontmatter('interface', 'Console', 'Describes the operator console.')}\n# Purpose\nSupports operators.\n# Components\nA command console.\n# Relationships\n## Within This Category\nNone\n## Across Categories\nNone\n# Source References\nNone\n`);
+  write('docs/app/interface/z-diagram.svg', '<svg/>');
+  spawnSync('git', ['init', '-q', root], { encoding: 'utf8' });
+
+  const stale = spawnSync(process.execPath, [cli, 'check', root], { encoding: 'utf8' });
+  assert.equal(stale.status, 1, stale.stderr + stale.stdout);
+  assert.match(stale.stdout, /stale.*STRUCTURE|STRUCTURE.*stale/i);
+
+  const fixed = spawnSync(process.execPath, [cli, 'fix', root], { encoding: 'utf8' });
+  assert.equal(fixed.status, 0, fixed.stderr + fixed.stdout);
+  assert.match(fixed.stdout, /FIXED docs\/app\/STRUCTURE\.md/);
+  const structure = fs.readFileSync(path.join(root, 'docs/app/STRUCTURE.md'), 'utf8');
+  assert.equal(structure.slice(0, structure.indexOf('| Path | Kind | Description |')), `${structureFrontmatter}\n`);
+  const rows = structure.slice(structure.indexOf('| Path | Kind | Description |'));
+  assert.equal(rows, `| Path | Kind | Description |\n|---|---|---|\n| data/ | Directory | Data-system documentation. |\n| data/postgres/ | Directory | Documentation directory. |\n| data/postgres/public/ | Directory | Documentation directory. |\n| data/postgres/public/tables/ | Directory | Documentation directory. |\n| data/postgres/public/tables/customers.md | Document | Describes customer records. |\n| interface/ | Directory | User-facing interface documentation. |\n| interface/console.md | Document | Describes the operator console. |\n| interface/z-diagram.svg | Asset | Supporting asset. |\n`);
+  const valid = spawnSync(process.execPath, [cli, 'check', root], { encoding: 'utf8' });
+  fs.rmSync(root, { recursive: true, force: true });
+  assert.equal(valid.status, 0, valid.stderr + valid.stdout);
+});
+
+test('fix preserves quoted scalars and every existing line ending while normalizing metadata', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'project-docs-test-'));
+  const target = path.join(root, 'docs/guides/operators.md');
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  const body = `# Purpose\r\nOperate the repository.\n# Responsibilities\r\nMaintain docs.\r\n# Prerequisites\r\nRepository access.\r\n# Workflows\r\nRun checks.\r\n# Verification\r\nReview output.\r\n# Troubleshooting\r\nInspect errors.\r\n# Related Documentation\r\nNone\r\n`;
+  const text = `---\r\ntype:   guide\r\ntitle: 'Operators: Daily'\r\ndescription: Guides repository operators.\r\ntags:\r\n  -   'operations: daily'  \r\ntimestamp: 2026-07-14T00:00:00Z\r\n---\r\n${body}`;
+  fs.writeFileSync(target, Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from(text)]));
+  spawnSync('git', ['init', '-q', root], { encoding: 'utf8' });
+
+  const fixed = spawnSync(process.execPath, [cli, 'fix', root], { encoding: 'utf8' });
+  assert.equal(fixed.status, 0, fixed.stderr + fixed.stdout);
+  assert.match(fixed.stdout, /FIXED docs\/guides\/operators\.md/);
+  const bytes = fs.readFileSync(target);
+  const result = bytes.toString('utf8');
+  fs.rmSync(root, { recursive: true, force: true });
+  assert.notDeepEqual([...bytes.subarray(0, 3)], [0xef, 0xbb, 0xbf]);
+  assert.match(result, /^---\r\ntype: guide\r\n/);
+  assert.match(result, /\r\ntitle: 'Operators: Daily'\r\n/);
+  assert.match(result, /\r\n  - 'operations: daily'\r\n/);
+  assert.match(result, /\r\ntimestamp: '2026-07-14T00:00:00Z'\r\n/);
+  assert.equal(result.slice(result.indexOf('# Purpose')), body);
+});
+
+test('fix aborts its complete plan before writing when encoding is unsafe', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'project-docs-test-'));
+  const readme = path.join(root, 'README.md');
+  const invalid = path.join(root, 'docs/guides/invalid.md');
+  fs.mkdirSync(path.dirname(invalid), { recursive: true });
+  fs.writeFileSync(readme, Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from('# Project\n')]));
+  fs.writeFileSync(invalid, Buffer.from([0xff, 0xfe, 0xfd]));
+  spawnSync('git', ['init', '-q', root], { encoding: 'utf8' });
+
+  const fixed = spawnSync(process.execPath, [cli, 'fix', root], { encoding: 'utf8' });
+  const readmeAfter = fs.readFileSync(readme);
+  fs.rmSync(root, { recursive: true, force: true });
+  assert.equal(fixed.status, 1, fixed.stderr + fixed.stdout);
+  assert.match(fixed.stderr, /aborted before writing/i);
+  assert.deepEqual([...readmeAfter.subarray(0, 3)], [0xef, 0xbb, 0xbf]);
+});
