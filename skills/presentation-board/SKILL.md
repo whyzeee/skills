@@ -17,7 +17,7 @@ The third-party HTML/frontend skill must be available:
 npx skills add nexu-io/open-design -g -s frontend-design -y
 ```
 
-Load or follow `frontend-design` before final HTML craft. If it is unavailable, proceed only with a plain but usable HTML board and say the polish pass was skipped.
+Before using this skill, check whether `frontend-design` is available. If it is not installed, warn the user to install it with the command above before proceeding; only continue without it if the user explicitly accepts a plain fallback. Load or follow `frontend-design` before final HTML craft.
 
 ## When to Use
 
@@ -31,7 +31,7 @@ Do not use for static prose, generic dashboards, production app architecture, or
 
 1. **Resolve the model.** If the user gave only a topic/data, run `abstraction-modeling` first. If they gave a hierarchy, validate it against the abstraction-modeling checklist. Completion: the board has a traceable model.
 2. **Choose the board frame.** Use one page, one primary board, and one details panel. Completion: no extra pages, routing, or framework exists.
-3. **Apply frontend-design.** Use the third-party skill for typography, spacing, color, responsive behavior, and states. Completion: the board avoids generic AI styling and has hover/focus/active states.
+3. **Apply frontend-design minimally.** Use the third-party skill for typography, spacing, color, responsive behavior, and states, but keep the design quiet: fewer accents, fewer competing panels, and no decorative elements that distract from the story. Preserve enough visible context for the user to understand the whole thing. If the cleaned-up view still has too much information, hide secondary details in accessible tooltips instead of deleting them. Completion: the board avoids generic AI styling, reduces storytelling noise, preserves comprehension, and has hover/focus/active states.
 4. **Implement progressive disclosure.** Default to collapsed executive view, expand one layer at a time, and show selected-node details. Completion: a manager can read the top level first and trace any number later.
 5. **Expose uncertainty controls only if useful.** Add toggles for risks, confidence, and assumptions when those fields exist. Completion: controls map to real model fields.
 6. **Keep it standalone.** Prefer inline CSS/JS in a single HTML file unless the user asks for a project. Completion: opening the file locally works.
@@ -41,11 +41,13 @@ Do not use for static prose, generic dashboards, production app architecture, or
 
 Minimum UI:
 
+- Minimal visual style that supports the story instead of competing with it
 - Executive summary/root node
 - Expandable hierarchy
 - Rollup values visible at every level that has values
 - Selected-node side panel or details region
 - Evidence/assumption visibility when present
+- Tooltips for secondary details that would otherwise overcrowd the board
 - Keyboard-reachable controls and visible focus states
 - Responsive layout for desktop and narrow screens
 
@@ -56,11 +58,14 @@ Minimum UI:
 3. **All details open.** That is a report, not a drilldown.
 4. **Invented certainty.** Unknown evidence stays visible as an assumption or low confidence.
 5. **Dependency sprawl.** Use the third-party design skill for guidance, not a package pile.
+6. **Noisy design.** `frontend-design` can produce rich visuals; constrain it to minimalist storytelling so visual craft clarifies the hierarchy rather than competing with it.
+7. **Information amputation.** Do not remove necessary context just to make the board look clean. Hide secondary but useful details in tooltips when the main view is crowded.
 
 ## Verification Checklist
 
 - [ ] `abstraction-modeling` produced or validated the model.
-- [ ] `frontend-design` was used, or the skipped polish pass is stated.
+- [ ] `frontend-design` was installed and used, or the user was warned to install `nexu-io/open-design@frontend-design` and explicitly accepted a plain fallback.
+- [ ] The visual design is minimalist enough to reduce storytelling noise without losing the user's ability to understand the whole thing.
 - [ ] The artifact is one standalone HTML file unless explicitly requested otherwise.
 - [ ] The executive view starts collapsed and supports drilldown.
 - [ ] Values are traceable to children or explicit assumptions.
