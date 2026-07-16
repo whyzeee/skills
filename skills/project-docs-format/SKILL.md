@@ -16,6 +16,8 @@ Workflow skills load this contract instead of restating it:
 - `audit-project-docs` validates and deterministically repairs the contract.
 - `ask-project-docs` captures resolved knowledge.
 
+If the user only wants to sharpen an idea or firm down requirements without creating documentation, use [`requirement-gathering`](../requirement-gathering/SKILL.md) instead of this contract.
+
 ## Canonical shape
 
 ```text

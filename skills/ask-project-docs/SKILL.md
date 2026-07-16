@@ -1,6 +1,6 @@
 ---
 name: ask-project-docs
-description: Use when interviewing a user to resolve and immediately capture project knowledge about one selected topic.
+description: Use when interviewing a user to resolve and immediately capture project knowledge about one selected documentation topic.
 ---
 
 # Ask Project Documentation
@@ -9,9 +9,9 @@ description: Use when interviewing a user to resolve and immediately capture pro
 
 Load [`project-docs-format`](../project-docs-format/SKILL.md) before selecting or writing a destination. It owns canonical document kinds and meaning boundaries. Use [`audit-project-docs`](../audit-project-docs/SKILL.md) **Fix** after every write; it is the sole deterministic repair and validation implementation.
 
-When the topic would create, supersede, or consolidate a decision or local issue, load its lifecycle in [`project-docs-format/references/document-kinds.md`](../project-docs-format/references/document-kinds.md) before choosing the next question or proposing a destination. Treat every applicability, identifier, history, and duplicate gate as part of the atomic fact and candidate diff.
+Load [`requirement-gathering`](../requirement-gathering/SKILL.md) for the interview discipline: scoped topic, one question at a time, no transcript or scratch source of truth, challenge contradictions, and stop at resolved understanding. This skill adds only the project-documentation capture, candidate-diff, and validation rules.
 
-This is a topic-scoped interview, not a repository audit. Ask exactly one question at a time, wait for its answer, and keep no transcript, interview note, scratch document, or second source of truth.
+When the topic would create, supersede, or consolidate a decision or local issue, load its lifecycle in [`project-docs-format/references/document-kinds.md`](../project-docs-format/references/document-kinds.md) before choosing the next question or proposing a destination. Treat every applicability, identifier, history, and duplicate gate as part of the atomic fact and candidate diff.
 
 ## Protect the project
 
@@ -31,14 +31,11 @@ Completion: every candidate question names a material ambiguity in the selected 
 
 ## Ask the interview
 
-Repeat this loop until a stop condition applies:
+Follow the `requirement-gathering` loop until a stop condition applies. After each resolved answer, capture it immediately through this documentation-specific extension:
 
-1. Choose the single unresolved question whose answer would remove the most downstream uncertainty. Prefer, in order, an authority conflict, a boundary or responsibility affecting several facts, an overloaded or cross-domain term, then a narrower behavior or relationship. Do not ask a batch or preview later questions.
-2. Ask that one question directly. When wording is overloaded, name the competing meanings and domains. When an abstract definition could hide disagreement, ask one concrete scenario that distinguishes the alternatives.
-3. Test the answer against relevant evidence and prior resolved facts. Challenge a conflict with one concrete counterexample or boundary case rather than accepting inconsistent language. If the answer is tentative, contradictory, or missing authority, keep the claim unresolved and ask the next single highest-impact clarification.
-4. State the exact fact, its canonical destination, and the proposed edit. Before asking for confirmation, make a disposable OS-temporary Git copy of the current worktree, apply the proposed edit there, and run `audit-project-docs` **Fix**. Record its status plus every candidate path and byte change, then remove the copy. Status 1 keeps the fact unresolved until the proposed content is corrected; status 2 stops as a failed invocation.
-5. Ask one confirmation question covering the exact fact and candidate diff. Explicitly disclose every deterministic change outside the destination and every candidate change to a path that was already dirty or untracked; require approval to change those current contents. A declined or revised proposal remains unresolved.
-6. Immediately apply the confirmed proposed edit to the real destination, preserving unrelated content, then run `audit-project-docs` **Fix**. Update the timestamp only for a meaningful authored-content change. Status 0 captures the fact only when actual changed paths match the approved candidate; an unexpected path or byte change stops the interview and is reported. Status 1 blocks the next question until approved semantic corrections are applied and Fix passes, or until every error is reported and the interview stops. Status 2 stops as a failed invocation. Do not retain the answer anywhere else.
+1. State the exact fact, its canonical destination, and the proposed edit. Before asking for confirmation, make a disposable OS-temporary Git copy of the current worktree, apply the proposed edit there, and run `audit-project-docs` **Fix**. Record its status plus every candidate path and byte change, then remove the copy. Status 1 keeps the fact unresolved until the proposed content is corrected; status 2 stops as a failed invocation.
+2. Ask one confirmation question covering the exact fact and candidate diff. Explicitly disclose every deterministic change outside the destination and every candidate change to a path that was already dirty or untracked; require approval to change those current contents. A declined or revised proposal remains unresolved.
+3. Immediately apply the confirmed proposed edit to the real destination, preserving unrelated content, then run `audit-project-docs` **Fix**. Update the timestamp only for a meaningful authored-content change. Status 0 captures the fact only when actual changed paths match the approved candidate; an unexpected path or byte change stops the interview and is reported. Status 1 blocks the next question until approved semantic corrections are applied and Fix passes, or until every error is reported and the interview stops. Status 2 stops as a failed invocation. Do not retain the answer anywhere else.
 
 After validation, reassess only the selected topic and ask the next one question.
 
