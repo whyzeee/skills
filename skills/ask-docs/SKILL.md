@@ -1,9 +1,9 @@
 ---
-name: refer-project-docs
+name: ask-docs
 description: Use when answering questions about a project through its canonical documentation and verifying current implementation facts in source.
 ---
 
-# Refer to Project Documentation
+# Ask Docs
 
 ## Contract
 

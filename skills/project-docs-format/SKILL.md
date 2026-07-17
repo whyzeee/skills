@@ -12,9 +12,9 @@ This skill is the single source of truth for the repository-native documentation
 Workflow skills load this contract instead of restating it:
 
 - `setup-project-docs` selects and creates an approved shape.
-- `refer-project-docs` navigates documentation and verifies implementation claims.
+- `ask-docs` navigates documentation and verifies implementation claims.
 - `audit-project-docs` validates and deterministically repairs the contract.
-- `ask-project-docs` captures resolved knowledge.
+- `new-feature` captures resolved feature decisions.
 
 If the user only wants to sharpen an idea or firm down requirements without creating documentation, use [`requirement-gathering`](../requirement-gathering/SKILL.md) instead of this contract.
 

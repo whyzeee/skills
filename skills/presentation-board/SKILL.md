@@ -35,7 +35,7 @@ Do not use for static prose, generic dashboards, production app architecture, or
 4. **Implement progressive disclosure.** Default to collapsed executive view, expand one layer at a time, and show selected-node details. Completion: a manager can read the top level first and trace any number later.
 5. **Expose uncertainty controls only if useful.** Add toggles for risks, confidence, and assumptions when those fields exist. Completion: controls map to real model fields.
 6. **Keep it standalone.** Prefer inline CSS/JS in a single HTML file unless the user asks for a project. Completion: opening the file locally works.
-7. **Verify the artifact.** Run the smallest available check: file exists, browser opens or a smoke test confirms core IDs/controls. Completion: the generated HTML is exercised once.
+7. **Verify the artifact.** Run the smallest available check: file exists, browser opens or a smoke test confirms core IDs/controls. Exercise one real drilldown path: expanding a node must not throw, selected details must render, and node title/summary text must be visually separated rather than glued together. Completion: the generated HTML is exercised once and the first-click drilldown works.
 
 ## Board Requirements
 
@@ -67,7 +67,9 @@ Minimum UI:
 - [ ] `frontend-design` was installed and used, or the user was warned to install `nexu-io/open-design@frontend-design` and explicitly accepted a plain fallback.
 - [ ] The visual design is minimalist enough to reduce storytelling noise without losing the user's ability to understand the whole thing.
 - [ ] The artifact is one standalone HTML file unless explicitly requested otherwise.
-- [ ] The executive view starts collapsed and supports drilldown.
+- [ ] The executive view starts collapsed and supports a first-click drilldown without JavaScript errors.
+- [ ] Selected-node details render after a drilldown click.
+- [ ] Node title and summary are visually separated, not glued together.
 - [ ] Values are traceable to children or explicit assumptions.
 - [ ] Core controls are keyboard reachable and responsive.
 - [ ] The HTML was opened or smoke-tested once.

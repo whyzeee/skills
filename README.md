@@ -7,13 +7,13 @@ Five focused agent skills maintain repository-native project knowledge, plus one
 - `/project-docs-format` — explain the canonical documentation contract without inspecting or changing a project.
 - `/requirement-gathering` — sharpen an idea or requirement through a scoped one-question-at-a-time interview without creating artifacts.
 - `/setup-project-docs` — initialize or migrate an approved documentation shape safely.
-- `/refer-project-docs` — answer project questions through canonical knowledge and verify current behavior in source.
+- `/ask-docs` — answer project questions through canonical knowledge and verify current behavior in source.
 - `/audit-project-docs` — check documentation, repair deterministic defects, and audit documentation related to changed source.
-- `/ask-project-docs` — resolve one project-knowledge topic at a time and immediately capture confirmed facts.
+- `/new-feature` — resolve project behavior or feature decisions, then document decisions and ticket follow-up work.
 
 ## Composition
 
-`project-docs-format` owns the shared documentation contract. `requirement-gathering` owns the generic interview discipline. The four documentation workflow skills load those contracts rather than restating schemas or interview rules. `setup-project-docs` and `ask-project-docs` reuse `audit-project-docs` for deterministic repair and validation; `refer-project-docs` stays read-only and verifies implementation claims directly against source.
+`project-docs-format` owns the shared documentation contract. `requirement-gathering` owns the generic interview discipline. The four documentation workflow skills load those contracts rather than restating schemas or interview rules. `setup-project-docs` and `new-feature` reuse `audit-project-docs` for deterministic repair and validation; `ask-docs` stays read-only and verifies implementation claims directly against source.
 
 The validator is bundled under `skills/audit-project-docs/bin/`. Target projects receive Markdown only: no validator copy, package manifest, compiler configuration, or test framework.
 

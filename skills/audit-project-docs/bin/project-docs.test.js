@@ -668,7 +668,7 @@ test('completed lifecycle output validates and setup and interview reach the sha
 
   const result = spawnSync(process.execPath, [cli, 'check', root], { encoding: 'utf8' });
   const setup = fs.readFileSync(path.join(__dirname, '..', '..', 'setup-project-docs', 'SKILL.md'), 'utf8');
-  const interview = fs.readFileSync(path.join(__dirname, '..', '..', 'ask-project-docs', 'SKILL.md'), 'utf8');
+  const interview = fs.readFileSync(path.join(__dirname, '..', '..', 'new-feature', 'SKILL.md'), 'utf8');
   fs.rmSync(root, { recursive: true, force: true });
 
   assert.equal(result.status, 0, result.stderr + result.stdout);

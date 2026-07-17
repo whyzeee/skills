@@ -1,15 +1,15 @@
 ---
-name: ask-project-docs
-description: Use when interviewing a user to resolve and immediately capture project knowledge about one selected documentation topic.
+name: new-feature
+description: Use when interviewing a user to resolve and capture project behavior or feature decisions, then document decisions and ticket follow-up work.
 ---
 
-# Ask Project Documentation
+# New Feature
 
 ## Contract
 
 Load [`project-docs-format`](../project-docs-format/SKILL.md) before selecting or writing a destination. It owns canonical document kinds and meaning boundaries. Use [`audit-project-docs`](../audit-project-docs/SKILL.md) **Fix** after every write; it is the sole deterministic repair and validation implementation.
 
-Load [`requirement-gathering`](../requirement-gathering/SKILL.md) for the interview discipline: scoped topic, one question at a time, no transcript or scratch source of truth, challenge contradictions, and stop at resolved understanding. This skill adds only the project-documentation capture, candidate-diff, and validation rules.
+Load [`requirement-gathering`](../requirement-gathering/SKILL.md) for the interview discipline: scoped topic, one question at a time, no transcript or scratch source of truth, challenge contradictions, and stop at resolved understanding. This skill adds only the project-documentation capture, candidate-diff, validation, and follow-up-ticket rules.
 
 When the topic would create, supersede, or consolidate a decision or local issue, load its lifecycle in [`project-docs-format/references/document-kinds.md`](../project-docs-format/references/document-kinds.md) before choosing the next question or proposing a destination. Treat every applicability, identifier, history, and duplicate gate as part of the atomic fact and candidate diff.
 
@@ -58,4 +58,4 @@ Stop immediately when any one condition is true:
 - validation cannot reach status 0 without an unresolved semantic decision;
 - the user explicitly stops.
 
-Before finishing, confirm that every resolved fact has one canonical owner, the final write received status 0 from shared Fix, and no transcript or neighboring placeholder exists. Compare final Git status with the baseline, report every interview-created change separately from pre-existing changes, and leave all changes unstaged and uncommitted.
+Before finishing, capture every resolved project behavior or feature decision in the applicable decision document through the same candidate-diff, approval, and Fix path above. If the session leaves implementation work that should become issues, use `/to-tickets` skill to draft the slices, and get the user's approval for the slice list and blockers before creating issues. Then confirm that every resolved fact has one canonical owner, the final write received status 0 from shared Fix, and no transcript or neighboring placeholder exists. Compare final Git status with the baseline, report every interview-created change separately from pre-existing changes, and leave all changes unstaged and uncommitted.
