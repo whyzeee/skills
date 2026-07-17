@@ -39,9 +39,13 @@ Follow the `requirement-gathering` loop until a stop condition applies. After ea
 
 After validation, reassess only the selected topic and ask the next one question.
 
+## Offer setup before a missing destination
+
+When canonical documentation is missing or no canonical destination exists for the selected topic, make the next single question whether to switch to `setup-project-docs` for project documentation initialization. If the user accepts, stop this interview and invoke `setup-project-docs`; do not write from this skill. If the user declines setup, continue with the one-document destination below. Completion: setup was accepted and handed off, or explicitly declined before any missing-destination write.
+
 ## Create one missing destination
 
-When no canonical destination exists, load the applicable document-kind reference and make that document the first atomic fact to resolve. Inspect topic evidence and draft exactly one complete substantive document; do not create adjacent files, directories without that file, placeholders, `.gitkeep`, speculative content, or manufactured `None`.
+After setup is declined and no canonical destination exists, load the applicable document-kind reference and make that document the first atomic fact to resolve. Inspect topic evidence and draft exactly one complete substantive document; do not create adjacent files, directories without that file, placeholders, `.gitkeep`, speculative content, or manufactured `None`.
 
 Run the complete draft through candidate-validation step 4, then use step 5's single question to ask whether that exact document and full candidate diff are authoritative. Treat partial answers and corrections as unresolved input to the next complete draft, not as resolved facts; do not confirm or buffer them in another artifact. Once the user confirms, write and validate it immediately through step 6. If evidence and answers cannot support every required section, stop with the missing evidence rather than creating an invalid destination.
 
