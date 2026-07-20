@@ -50,7 +50,7 @@ Type: `data`.
 
 Use literal `None` instead of an empty table. `Within Data` covers relationships to other data objects; `Across Categories` covers relationships to interface or logic documents.
 
-## Role guide
+## Guide
 
 Type: `guide`.
 
@@ -64,7 +64,7 @@ Type: `guide`.
 # Related Documentation
 ```
 
-Roles come from the project. Names such as developer, data engineer, and operator are examples rather than required roles.
+Guides are organized by use case and audience need, not by a required role taxonomy or directory shape. A guide may serve one role, many roles, or no named role; choose the structure that best fits the project type and guide purpose. Names such as developer, data engineer, and operator are examples only.
 
 ## Specialized agent
 
