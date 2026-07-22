@@ -51,13 +51,3 @@ Use a minimal technical field-guide aesthetic:
 Treat color as lane identity or semantic state, not decoration. Keep typography and spacing responsible for hierarchy. Avoid decorative gradients, glass effects, card-heavy nodes, emoji icons, and force-layout movement.
 
 Completion: lane identity remains legible without color alone, and the graph reads as one technical field rather than a collection of cards.
-
-## Focused CDC Example
-
-A CDC streaming board used seven fixed stages:
-
-**Source → Capture → Raw Kafka → Flink Transform → Sink-ready Kafka → MongoDB Sink → Projection**
-
-It used two lanes—deposit replication and customer/address enrichment—with the customer and address branches visibly converging at the Flink enrichment stage. The stable pipeline was preferable to a timeline, tree, or generic network because the story was deterministic streaming flow, shared architecture, and convergence.
-
-This example is evidence for the pattern, not a template: retain the layout grammar, but derive stage names, lane count, colors, controls, and details from the current model.
